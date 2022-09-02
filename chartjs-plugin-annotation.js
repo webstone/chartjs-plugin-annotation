@@ -1,13 +1,13 @@
 /*!
  * chartjs-plugin-annotation.js
  * http://chartjs.org/
- * Version: 0.5.7
+ * Version: 0.5.7-patched
  *
  * Copyright 2016 Evert Timberg
  * Released under the MIT license
  * https://github.com/chartjs/Chart.Annotation.js/blob/master/LICENSE.md
  */
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 
 },{}],2:[function(require,module,exports){
 module.exports = function(Chart) {
@@ -258,7 +258,9 @@ module.exports = function(Chart) {
 
 		if (eventHandlers.length > 0) {
 			e.stopImmediatePropagation();
-			e.preventDefault();
+			if (!helpers.supportsEventListenerOptions) {
+				e.preventDefault();
+			}
 			eventHandlers.forEach(function(eventHandler) {
 				// [handler, event, element]
 				eventHandler[0].call(eventHandler[2], eventHandler[1]);
@@ -442,6 +444,25 @@ module.exports = function(Chart) {
 			})
 			.slice(0, 1)[0]; // return only the top item
 	}
+	/**
+	 * Copied from https://github.com/chartjs/Chart.js/blob/4f722ab619be071e90dd9ea67db27032dc9edd2a/src/platforms/platform.dom.js#L109
+	 */
+	var supportsEventListenerOptions = (function() {
+		var supports = false;
+		try {
+			var options = Object.defineProperty({}, 'passive', {
+				// eslint-disable-next-line getter-return
+				get: function() {
+					supports = true;
+				}
+			});
+			window.addEventListener('e', null, options);
+		} catch (e) {
+			// continue regardless of error
+		}
+		return supports;
+	}());
+
 
 	return {
 		initConfig: initConfig,
@@ -454,7 +475,8 @@ module.exports = function(Chart) {
 		adjustScaleRange: adjustScaleRange,
 		getNearestItems: getNearestItems,
 		getEventHandlerName: getEventHandlerName,
-		createMouseEvent: createMouseEvent
+		createMouseEvent: createMouseEvent,
+		supportsEventListenerOptions: supportsEventListenerOptions
 	};
 };
 
